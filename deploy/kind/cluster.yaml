@@ -1,0 +1,31 @@
+apiVersion: kind.x-k8s.io/v1alpha4
+kind: Cluster
+name: tawreed
+nodes:
+  # 1) Control plane
+  - role: control-plane
+
+  # 2) App node #1
+  - role: worker
+    labels:
+      tier: apps
+
+  # 3) App node #2
+  - role: worker
+    labels:
+      tier: apps
+
+  # 4) Data node (labeled + tainted)
+  - role: worker
+    labels:
+      tier: data
+    # in kind there are join and init join for workers and init for control plane nodes, respectively.
+    # here we prevent scheduling of workloads on this node by adding a taint to it, so that only workloads with tolerations for this taint can be scheduled on it.
+    kubeadmConfigPatches:
+      - |
+        kind: JoinConfiguration
+        nodeRegistration:
+          taints:
+            - key: dedicated
+              value: data
+              effect: NoSchedule
